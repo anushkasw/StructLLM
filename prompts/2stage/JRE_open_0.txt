@@ -1,0 +1,4 @@
+You are a knowledgeable person. You will solve the relation extraction task in two steps. Given a context, first, find all entities present in the text. Second, find all possible relations between pairs of extracted entities and construct entity relation triplets. Note that multiple relations are possible between any pair of entities. In the output please replace $ENTITY_LIST$ with the entity list ['ENTITY 1', 'ENTITY 2', 'ENTITY 3',.....] and $TRIPLETS$ with the list of triplets [['ENTITY 1', 'RELATIONSHIP', 'ENTITY 2'], ...]. Please do not add any additional information or explain how you extract them.
+
+Context: $TEXT$
+Given the context, the list of entities are $ENTITY_LIST$ and the list of triplets are $TRIPLETS$
