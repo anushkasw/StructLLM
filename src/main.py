@@ -15,7 +15,7 @@ gc.collect()
 torch.cuda.empty_cache()
 
 from data_loader import DataProcessor
-from prompt import JRE_Prompt_Processor, RC_Prompt_Processor
+from prompt import JRE_Prompt_Processor
 from hugging_api import model_init, model_inference
 from utils import check_output_validity
 from gpt_api import Demo
@@ -29,17 +29,11 @@ def set_seed(seed):
 
 
 def main(args):
-    if not args.demo == 'zero':
-        k_list = [5, 10]
-    else:
-        k_list = [0]
+    k_list = [0]
     args.data_dir = f'{args.data_dir}/Data_{args.re_type}'
     for k in k_list:
         print(f'\tEvaluating Shot - {k}')
-        if args.re_type == 'JRE':
-            seed_list = [13, 42, 100]
-        else:
-            seed_list = [21, 54, 87]
+        seed_list = [13, 42, 100]
 
         for data_seed in seed_list:
             print(f'\tEvaluating Seed - {data_seed}')
@@ -49,9 +43,7 @@ def main(args):
                 outpath = f'{args.out_path}/{args.re_type}/{args.exp}/OpenAI/{args.model}/{args.dataset}/{args.demo}/seed-{data_seed}'
             os.makedirs(outpath, exist_ok=True)
 
-            if args.prompt == 'ent' and args.exp in ['multi-choice', '1stage']:
-                filename = f'{outpath}/{args.structure}-{args.prompt}-{k}.jsonl'
-            elif args.exp == 'structure_extract':
+            if args.exp == 'structure_extract':
                 filename = f'{outpath}/{args.parser}_{args.structure}-{args.prompt}-{k}.jsonl'
             else:
                 filename = f'{outpath}/{args.prompt}-{k}.jsonl'
@@ -65,10 +57,7 @@ def main(args):
             test_examples = data_processor.get_test_examples()
 
             prompt_processor = None
-            if args.re_type == 'JRE':
-                prompt_processor = JRE_Prompt_Processor(args, data_processor)
-            elif args.re_type == 'RC':
-                prompt_processor = RC_Prompt_Processor(args, data_processor)
+            prompt_processor = JRE_Prompt_Processor(args, data_processor)
 
             incomplete_flag, test_completed = check_output_validity(filename, test_examples)
             if test_completed:
@@ -94,22 +83,11 @@ def main(args):
 
             print(f'\tNumber of GPUs available: {torch.cuda.device_count()}')
 
-            if not args.demo == 'zero':
-                print(f'\tLoading Demo Mapping from: {args.data_dir}/{args.dataset}/{args.demo}Demo/k-{k}.jsonl')
-                if os.path.exists(f'{args.data_dir}/{args.dataset}/{args.demo}Demo/k-{k}.jsonl'):
-                    with open(f'{args.data_dir}/{args.dataset}/{args.demo}Demo/k-{k}.jsonl', 'r') as f:
-                        demo_mapping = json.load(f)
-                else:
-                    raise FileNotFoundError(f'Cannot find {args.data_dir}/{args.dataset}/{args.demo}Demo/k-{k}.jsonl')
-
             for idx, input in tqdm(test_examples.items()):
                 if incomplete_flag:
                     if input.id in test_completed:
                         continue
 
-                demo_list = None
-                if not args.demo == 'zero':
-                    demo_list = [train_dict[i] for i in demo_mapping[input.id]]
                 prompt = prompt_processor.create_prompt(input, demo_list)
 
                 if not args.model.lower().startswith(('OpenAI', 'gpt')):
@@ -138,8 +116,6 @@ def main(args):
                     if f.tell() > 0:  # Check if file is not empty
                         f.write('\n')
                     json.dump(test_res, f)
-
-            del data_processor, model, tokenizer
 
 
 if __name__ == "__main__":

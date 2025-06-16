@@ -31,19 +31,7 @@ def check_output_validity(filename, test_dict):
 def get_rel2prompt(dataset, rel2id):
     rel2prompt = {}
     for name, id in rel2id.items():
-        if dataset == 'wiki80':
-            labels = name.split(' ')
-
-        elif dataset == 'semeval_nodir':
-            labels = name.split('-')
-
-        elif dataset == 'FewRel':
-            labels = name.split('_')
-
-        elif dataset == 'CORE':
-            labels = name.split('_')
-
-        elif dataset in ['NYT10', 'GIDS', 'NYT10_new']:
+        if dataset in ['NYT10', 'GIDS', 'NYT10_new']:
             if name == 'Other':
                 labels = ['None']
             elif name == '/people/person/education./education/education/institution':
@@ -59,51 +47,17 @@ def get_rel2prompt(dataset, rel2id):
                         labels[idx] = lab.split("_")
                 labels = flatten_list(labels)
 
-        elif dataset == 'FinRED':
-            if name == "director_/_manager":
-                labels = ['director', 'manager']
-            else:
-                labels = name.split('_')
-
-        elif dataset == 'FIRE':
-            labels = re.findall('[A-Z][^A-Z]*', name)
-
-        elif dataset == 'WebNLG':
-            name_mod = re.sub(r"['()]", '', name)
-            labels = name_mod.split(' ')
-
-            if len(labels) == 1:
-                label0 = labels[0]
-                if "_" in label0:
-                    labels = label0.split("_")
-
-                    for idx, lab in enumerate(labels):
-                        if any(char.isupper() for char in lab) and not lab.isupper():
-                            l = re.split(r'(?=[A-Z])', lab)
-                            if l[0] == "":
-                                l = l[1:]
-                            labels[idx] = l
-
-                    labels = flatten_list(labels)
-
-                elif any(char.isupper() for char in label0):
-                    labels = re.split(r'(?=[A-Z])', label0)
-
         elif dataset == 'crossRE':
             if name == "win-defeat":
                 labels = ['win', 'or', 'defeat']
             else:
                 labels = name.split('-')
 
-        elif dataset in ['tacred', 'tacrev', 'retacred', 'dummy_tacred', 'kbp37', 'tacred_new', 'retacred_new']:
+        elif dataset in ['tacred', 'tacrev', 'retacred']:
             labels = [name.lower().replace("_", " ").replace("-", " ").replace("per", "person").replace("org",
                                                                                                         "organization").replace(
                 "stateor", "state or ")]
 
         labels = [item.lower() for item in labels]
-
-        if dataset == 'semeval_nodir':
-            rel2prompt[name] = ' and '.join(labels).upper()
-        else:
-            rel2prompt[name] = ' '.join(labels).upper()
+        rel2prompt[name] = ' '.join(labels).upper()
     return rel2prompt
